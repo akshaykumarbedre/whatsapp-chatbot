@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Information Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+
+    </style>
+</head>
+<body><nav>
+    <ul>
+        <li><a href="/">Business Dashboard</a></li>
+        <li><a href="/metrics_dashboard">Metrics Dashboard</a></li>
+        <li><a href="/streamlit">Streamlit</a></li>
+    </ul>
+</nav>
+
+    <div class="container">
+        <h1>Business Information Dashboard</h1>
+        
+        <section id="business-info">
+            <h2>Business Information</h2>
+            <form id="business-info-form">
+                <input type="text" id="business-name" placeholder="Business Name" required>
+                <textarea id="business-description" placeholder="Business Description" required></textarea>
+                <input type="text" id="brand-voice" placeholder="Brand Voice/Tone" required>
+                <button type="submit">Save Business Info</button>
+            </form>
+        </section>
+        
+        <section id="product-info">
+            <h2>Product Information</h2>
+            <form id="product-form">
+                <input type="text" id="product-name" placeholder="Product Name" required>
+                <input type="number" id="product-price" placeholder="Price" required>
+                <input type="text" id="product-type" placeholder="Type" required>
+                <input type="number" id="product-quantity" placeholder="Quantity" required>
+                <textarea id="product-description" placeholder="Product Description" required></textarea>
+                <button type="submit">Add Product</button>
+            </form>
+            <h3>Existing Products</h3>
+            <table id="product-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="product-list"></tbody>
+            </table>
+        </section>
+        
+        <section id="faq-info">
+            <h2>FAQ</h2>
+            <form id="faq-form">
+                <input type="text" id="faq-question" placeholder="Question" required>
+                <textarea id="faq-answer" placeholder="Answer" required></textarea>
+                <button type="submit">Add FAQ</button>
+            </form>
+            <h3>Existing FAQs</h3>
+            <table id="faq-table">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Answer</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="faq-list"></tbody>
+            </table>
+        </section>
+    </div>
+    
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

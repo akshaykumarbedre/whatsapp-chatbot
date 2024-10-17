@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metrics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='metrics_dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>    <nav>
+    <ul>
+        <li><a href="/">Business Dashboard</a></li>
+        <li><a href="/metrics_dashboard">Metrics Dashboard</a></li>
+    </ul>
+</nav>
+
+    <div class="container">
+        <h1>Metrics Dashboard</h1>
+        
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Total Conversations</h3>
+                <p id="total-conversations"></p>
+            </div>
+            <div class="metric-card">
+                <h3>Avg. Response Time</h3>
+                <p id="avg-response-time"></p>
+            </div>
+            <div class="metric-card">
+                <h3>Lead Conversion Rate</h3>
+                <p id="lead-conversion-rate"></p>
+            </div>
+            <div class="metric-card">
+                <h3>CSAT Score</h3>
+                <p id="csat-score"></p>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <div class="chart-wrapper">
+                <canvas id="conversations-chart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="csat-chart"></canvas>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="sentiment-chart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='metrics_dashboard.js') }}"></script>
+</body>
+</html>
