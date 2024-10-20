@@ -115,12 +115,14 @@ def query_knowledge_base(query: str) -> List[Dict[str, str]]:
 @tool
 def search_for_product_reccommendations(description: str):
     """
-    Looks up information in a knowledge base to help with product recommendation for customers. For example:
-
-    "Boquets suitable for birthdays, maybe with red flowers"
-    "A large boquet for a wedding"
-    "A cheap boquet with wildflowers"
-
+    You are a virtual shopping assistant for an e-commerce platform. Your role is to provide product recommendations 
+    based on customer inquiries across different categories. When a customer describes what they are looking for, 
+    you will search the inventory to find suitable products.
+    "A cheap laptop for students."
+    "Personal care products that are budget-friendly."
+    "Multipurpose cleaning spray for home use."
+    "Microfiber cleaning cloths (Pack of 6) for delicate surfaces."
+    "Eco-friendly household items for everyday cleaning."
     Args:
         query (str): Description of product features
 
