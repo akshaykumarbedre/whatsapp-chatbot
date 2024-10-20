@@ -16,7 +16,7 @@ conda activate ./.conda
 To run the frontend you can type:
 
 ```bash
-streamlit run streamlit_frontend.py
+python app.py
 ```
 
 cd ngrok-v3-stable-window-amd64
