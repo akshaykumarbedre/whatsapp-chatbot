@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # Initialize Twilio client
 twilio_client = Client(
-    os.getenv('TWILIO_ACCOUNT_SID'),
+    os.getenv('TWILIO_ACCOUNT_SID'),~~
     os.getenv('TWILIO_AUTH_TOKEN')
 )
 
