@@ -3,7 +3,7 @@ from langgraph.graph import StateGraph
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from langgraph.prebuilt import ToolNode
-from tools import query_knowledge_base, search_for_product_reccommendations, data_protection_check, create_new_customer, place_order, retrieve_existing_customer_orders, send_order_confirmation_email
+from tools import query_knowledge_base, search_for_product_reccommendations
 from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
@@ -16,17 +16,26 @@ mongo_client = MongoClient(os.environ['MONGODB_URI'])
 db = mongo_client['chat_history_db']
 chat_history_collection = db['chat_histories']
 
+
 prompt = """#Purpose
-You are a customer service chatbot for an online elastic products store. You can help customers achieve the goals listed below.
+You're an AI chatbot automating interactions between business owners and customers. Assist customers and provide product recommendations expertly.
 
 #Goals
-1. Answer questions users might have relating to the services offered.
-2. Recommend elastic products to users based on their preferences.
-3. Help customers check on an existing order or place a new order.
-4. To place and manage orders, you will need a customer profile (with an associated ID). If the customer already has a profile, perform a data protection check to retrieve their details. If not, create them a profile.
+1. Answer queries about services and products using your extensive knowledge.
+2. Recommend products based on customer preferences and needs.
+3. Upsell and cross-sell when appropriate.
 
 #Tone
-Helpful and friendly. Use Gen-Z emojis to keep things lighthearted.
+Friendly, helpful, and slightly playful. Use Gen-Z emojis sparingly. Maintain professionalism while showing enthusiasm.
+
+#Strategy
+1. Understand customer needs quickly.
+2. Suggest specific, fitting products.
+3. Explain recommendations, highlighting key features and benefits.
+4. Mention complementary products when relevant
+5. always keep short also respone in such a way how the user is chating but it should in positive way.
+
+Be the expert customers trust for information and personalized recommendations! 🛍️✨
 """
 
 chat_template = ChatPromptTemplate.from_messages([
@@ -34,7 +43,7 @@ chat_template = ChatPromptTemplate.from_messages([
     ('placeholder', "{messages}")
 ])
 
-tools = [query_knowledge_base, search_for_product_reccommendations, data_protection_check, create_new_customer, place_order, retrieve_existing_customer_orders, send_order_confirmation_email]
+tools = [query_knowledge_base, search_for_product_reccommendations]
 
 llm = ChatGroq(model="llama-3.1-70b-versatile", api_key=os.environ['GROQ_API_KEY'])
 llm_with_prompt = chat_template | llm.bind_tools(tools)
@@ -109,8 +118,6 @@ def update_user_history(user_id: str, messages: list):
 
 def clear_user_history(user_id: str):
     chat_history_collection.delete_one({'user_id': user_id})
-   
-
 
 # Example usage (for testing)
 def process_user_message(user_id: str, message: str):

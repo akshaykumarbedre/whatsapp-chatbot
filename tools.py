@@ -129,70 +129,70 @@ def search_for_product_reccommendations(description: str):
     """
     return vector_store.query_inventories(query=description)
 
-@tool
-def retrieve_existing_customer_orders(customer_id: str) -> List[Dict]:
-    """
-    Retrieves the orders associated with the customer, including their status, items and ids
+# @tool
+# def retrieve_existing_customer_orders(customer_id: str) -> List[Dict]:
+#     """
+#     Retrieves the orders associated with the customer, including their status, items and ids
 
-    Args:
-        customer_id (str): Customer unique id associated with the order
+#     Args:
+#         customer_id (str): Customer unique id associated with the order
 
-    Returns:
-        List[Dict]: All the orders associated with the customer_id passed in
-    """
-    customer_orders = [order for order in orders_database if order['customer_id'] == customer_id]
-    if not customer_orders:
-        return f"No orders associated with this customer id: {customer_id}"
-    return customer_orders
+#     Returns:
+#         List[Dict]: All the orders associated with the customer_id passed in
+#     """
+#     customer_orders = [order for order in orders_database if order['customer_id'] == customer_id]
+#     if not customer_orders:
+#         return f"No orders associated with this customer id: {customer_id}"
+#     return customer_orders
 
-@tool
-def place_order(items: Dict[str, int], customer_id: str) -> str:
-    """
-    Places an order for the requested items, and for the required quantities.
+# @tool
+# def place_order(items: Dict[str, int], customer_id: str) -> str:
+#     """
+#     Places an order for the requested items, and for the required quantities.
 
-    Args:
-        items (Dict[str, int]): Dictionary of items to order, with item id as the key and the quantity of that item as the value.
-        customer_id (str): The customer to place the order for
+#     Args:
+#         items (Dict[str, int]): Dictionary of items to order, with item id as the key and the quantity of that item as the value.
+#         customer_id (str): The customer to place the order for
 
-    Returns:
-        str: Message indicating that the order has been placed, 
-    """
-    # Check that the item ids are valid 
-    # Check that the quantities of items are valid
-    availability_messages = []
-    valid_item_ids = [
-        item['id'] for item in inventory_database
-    ]
-    for item_id, quantity in items.items():
-        if item_id not in valid_item_ids:
-            availability_messages.append(f'Item with id {item_id} is not found in the inventory')
-        else:
-            inventory_item = [item for item in inventory_database if item['id'] == item_id][0]
-            if quantity > inventory_item['quantity']:
-                availability_messages.append(f'There is insufficient quantity in the inventory for this item {inventory_item["name"]}\nAvailable: {inventory_item["quantity"]}\nRequested: {quantity}')
-    if availability_messages:
-        return "Order cannot be placed due to the following issues: \n" + '\n'.join(availability_messages)
+#     Returns:
+#         str: Message indicating that the order has been placed, 
+#     """
+#     # Check that the item ids are valid 
+#     # Check that the quantities of items are valid
+#     availability_messages = []
+#     valid_item_ids = [
+#         item['id'] for item in inventory_database
+#     ]
+#     for item_id, quantity in items.items():
+#         if item_id not in valid_item_ids:
+#             availability_messages.append(f'Item with id {item_id} is not found in the inventory')
+#         else:
+#             inventory_item = [item for item in inventory_database if item['id'] == item_id][0]
+#             if quantity > inventory_item['quantity']:
+#                 availability_messages.append(f'There is insufficient quantity in the inventory for this item {inventory_item["name"]}\nAvailable: {inventory_item["quantity"]}\nRequested: {quantity}')
+#     if availability_messages:
+#         return "Order cannot be placed due to the following issues: \n" + '\n'.join(availability_messages)
 
-    # Place the order (in pretend database)
-    order_id = len(orders_database) + 1
-    orders_database.append(
-        {
-            'order_id': order_id,
-            'customer_id': customer_id,
-            'status': 'Waiting for payment',
-            'items': list(items.keys()),
-            'quantity': list(items.values())
-        }
-    )
-    # Update the inventory
-    for item_id, quantity in items.items():
-        inventory_item = [item for item in inventory_database if item['id'] == item_id][0]
-        inventory_item['quantity'] -= quantity
+#     # Place the order (in pretend database)
+#     order_id = len(orders_database) + 1
+#     orders_database.append(
+#         {
+#             'order_id': order_id,
+#             'customer_id': customer_id,
+#             'status': 'Waiting for payment',
+#             'items': list(items.keys()),
+#             'quantity': list(items.values())
+#         }
+#     )
+#     # Update the inventory
+#     for item_id, quantity in items.items():
+#         inventory_item = [item for item in inventory_database if item['id'] == item_id][0]
+#         inventory_item['quantity'] -= quantity
 
-    # Send order confirmation email
-    email_result = send_order_confirmation_email(order_id, customer_id, items)
+#     # Send order confirmation email
+#     email_result = send_order_confirmation_email(order_id, customer_id, items)
 
-    return f"Order with id {order_id} has been placed successfully. {email_result}"
+#     return f"Order with id {order_id} has been placed successfully. {email_result}"
 
 @tool
 def send_order_confirmation_email(order_id: str, customer_id: str, items: Dict[str, int]) -> str:

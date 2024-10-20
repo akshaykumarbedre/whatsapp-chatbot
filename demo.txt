@@ -3,6 +3,7 @@ python-dotenv
 langchain-community
 pypdf
 bs4
+<<<<<<< HEAD
 wikipedia
 langchain-text-splitters
 langchain-openai
@@ -19,10 +20,18 @@ transformers
 arxiv
 duckduckgo-search
 youtube_transcript_api
+=======
+chromadb
+langchain-chroma
+streamlit
+langchain_groq
+langserve
+>>>>>>> 19143cb (Initial commit: Adding WhatsApp chatbot code)
 validators
 pytube
 unstructured
 libmagic
+<<<<<<< HEAD
 numexpr
 langchain_huggingface
 huggingface_hub
@@ -34,3 +43,9 @@ crewai
 crewai_tools
 yt_dlp==2023.11.14 
 youtube-transcript-api==0.6.1
+=======
+langchain_huggingface
+huggingface_hub
+boto3
+awsclz
+>>>>>>> 19143cb (Initial commit: Adding WhatsApp chatbot code)

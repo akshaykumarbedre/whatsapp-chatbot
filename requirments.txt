@@ -3,4 +3,9 @@ chromadb
 llama-index-embeddings-huggingface
 langchain-core
 langchain-openai
+<<<<<<< HEAD
 langgraph
+=======
+langgraph
+pymongo
+>>>>>>> 19143cb (Initial commit: Adding WhatsApp chatbot code)

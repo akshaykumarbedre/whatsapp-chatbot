@@ -8,7 +8,7 @@ st.set_page_config(layout='wide', page_title='Flower Shop Chatbot', page_icon='ð
 
 # Initialize session state
 if 'message_history' not in st.session_state:
-    st.session_state.message_history = [AIMessage(content="Hiya, I'm the flower shop chatbot. How can I help?")]
+    st.session_state.message_history = [AIMessage(content="Hello. How can I help?")]
 
 if 'user_id' not in st.session_state:
     st.session_state.user_id = None
@@ -25,15 +25,15 @@ with left_col:
         if user_history:
             st.session_state.message_history = user_history
         else:
-            st.session_state.message_history = [AIMessage(content="Hiya, I'm the flower shop chatbot. How can I help?")]
-        st.experimental_rerun()
+            st.session_state.message_history = [AIMessage(content="Hello. How can I help?")]
+        # st.experimental_rerun()
 
     if st.button('Clear Chat'):
-        st.session_state.message_history = [AIMessage(content="Hiya, I'm the flower shop chatbot. How can I help?")]
+        st.session_state.message_history = [AIMessage(content="Hello. How can I help?")]
         # Clear chat history in the database
         if st.session_state.user_id:
             clear_user_history(st.session_state.user_id)
-        st.experimental_rerun()
+        # st.experimental_rerun()
 
 # 2. Chat history and input
 with main_col:
