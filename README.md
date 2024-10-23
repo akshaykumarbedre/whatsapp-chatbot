@@ -1,6 +1,8 @@
 ## Demo Video
 
-[Click here to watch the video](./preview.mp4)
+<video src="./preview.mp4" autoplay muted controls="controls" style="max-width: 100%;">
+    Your browser does not support the video tag.
+</video>
 ## Setup
 
 To setup the python environment I did:
