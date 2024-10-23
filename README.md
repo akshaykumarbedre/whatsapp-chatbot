@@ -1,6 +1,6 @@
 ## Demo Video
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/OMXWGkL5X_o?autoplay=1&mute=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+![Video showing Demo whatsapp chatbot](preview.gif)
 
 ## Setup
 
