@@ -1,4 +1,6 @@
+## Demo Video
 
+[Click here to watch the video](./preview.mp4)
 ## Setup
 
 To setup the python environment I did:

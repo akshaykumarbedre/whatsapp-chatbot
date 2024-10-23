@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <td><span>${product.name}</span><input type="text" value="${product.name}"></td>
             <td><span>$${product.price}</span><input type="number" value="${product.price}"></td>
             <td><span>${product.type}</span><input type="text" value="${product.type}"></td>
-            <td><span>${product.quantity}</span><input type="number" value="${product.quantity}"></td>
+            <td><span>${product.quantity}</span><input type="text" value="${product.quantity}"></td>
             <td><span>${product.description}</span><textarea>${product.description}</textarea></td>
             <td>
                 <button class="edit-btn">Edit</button>

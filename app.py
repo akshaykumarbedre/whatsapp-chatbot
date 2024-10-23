@@ -8,7 +8,7 @@ import random
 from datetime import datetime, timedelta
 import os
 import subprocess
-from chatbot import sender_user_massage
+from chatbot import ProductChatbot
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Set a secret key for session management
@@ -16,16 +16,31 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# Initialize the chatbot
+chatbot = ProductChatbot()
+
 twilio_client = Client(
     os.getenv('TWILIO_ACCOUNT_SID'),
     os.getenv('TWILIO_AUTH_TOKEN')
 )
 
+# Example chat history
+chat_history = [
+    {"user_id": 1, "timestamp": "2024-10-01T10:00:00", "sender": "user", "message": "Hello!"},
+    {"user_id": 1, "timestamp": "2024-10-01T10:01:00", "sender": "assistant", "message": "Hi! How can I help you today?"},
+    {"user_id": 1, "timestamp": "2024-10-01T10:02:00", "sender": "user", "message": "I want to buy a laptop."},
+    {"user_id": 1, "timestamp": "2024-10-01T10:03:00", "sender": "assistant", "message": "Sure! Which one are you interested in?"},
+    {"user_id": 1, "timestamp": "2024-10-01T10:04:00", "sender": "user", "message": "On a scale of 1 to 5, how satisfied are you with our service?"},
+    {"user_id": 1, "timestamp": "2024-10-01T10:05:00", "sender": "assistant", "message": "I would rate it a 5."},
+    {"user_id": 2, "timestamp": "2024-10-01T10:00:00", "sender": "user", "message": "Hello!"},
+    {"user_id": 2, "timestamp": "2024-10-01T10:01:00", "sender": "assistant", "message": "Hi! How can I help you today?"},
+]
 # File paths
 BUSINESS_INFO_FILE = 'business_info.json'
 PRODUCTS_FILE = 'inventory.json'
 FAQS_FILE = 'FAQ.json'
 USERS_FILE = 'users.json'
+CHAT_HISTORY_FILE = 'chat_history.json'
 
 def load_json(file_path, default=None):
     try:
@@ -173,48 +188,6 @@ def delete_faq():
 def get_faqs():
     return jsonify(faqs)
 
-# @app.route('/get_metrics')
-# def get_metrics():
-#     total_conversations = random.randint(100, 1000)
-#     avg_response_time = round(random.uniform(5, 60), 2)
-#     lead_conversion_rate = round(random.uniform(0.1, 0.5), 2)
-#     csat_score = round(random.uniform(3.5, 5), 1)
-
-#     dates = [(datetime.now() - timedelta(days=i)).strftime('%Y-%m-%d') for i in range(7, 0, -1)]
-#     conversations_data = [random.randint(10, 100) for _ in range(7)]
-#     resolved_queries_data = [int(x * random.uniform(0.7, 0.9)) for x in conversations_data]
-#     csat_data = [round(random.uniform(3, 5), 1) for _ in range(7)]
-
-#     sentiment_data = {
-#         'Positive': random.randint(40, 60),
-#         'Neutral': random.randint(20, 40),
-#         'Negative': random.randint(10, 20)
-#     }
-
-#     return jsonify({
-#         'total_conversations': total_conversations,
-#         'avg_response_time': avg_response_time,
-#         'lead_conversion_rate': lead_conversion_rate,
-#         'csat_score': csat_score,
-        # 'chart_data': {
-        #     'dates': dates,
-        #     'conversations': conversations_data,
-        #     'resolved_queries': resolved_queries_data,
-        #     'csat': csat_data
-        # },
-#         'sentiment_data': sentiment_data
-#     })
-
-# # Example chat history
-# chat_history = [
-#     {"user_id": 1, "timestamp": "2024-10-01T10:00:00", "sender": "user", "message": "Hello!"},
-#     {"user_id": 1, "timestamp": "2024-10-01T10:01:00", "sender": "assistant", "message": "Hi! How can I help you today?"},
-#     {"user_id": 1, "timestamp": "2024-10-01T10:02:00", "sender": "user", "message": "I want to buy a laptop."},
-#     {"user_id": 1, "timestamp": "2024-10-01T10:03:00", "sender": "assistant", "message": "Sure! Which one are you interested in?"},
-#     {"user_id": 1, "timestamp": "2024-10-01T10:04:00", "sender": "user", "message": "On a scale of 1 to 5, how satisfied are you with our service?"},
-#     {"user_id": 1, "timestamp": "2024-10-01T10:05:00", "sender": "assistant", "message": "I would rate it a 5."},
-# ]
-
 from datetime import datetime
 
 from datetime import datetime, timedelta
@@ -316,75 +289,127 @@ def get_metrics():
     metrics = process_chat_history(chat_history)
     return jsonify(metrics) 
 
-# Example chat history
-chat_history = [
-    {"user_id": 1, "timestamp": "2024-10-01T10:00:00", "sender": "user", "message": "Hello!"},
-    {"user_id": 1, "timestamp": "2024-10-01T10:01:00", "sender": "assistant", "message": "Hi! How can I help you today?"},
-    {"user_id": 1, "timestamp": "2024-10-01T10:02:00", "sender": "user", "message": "I want to buy a laptop."},
-    {"user_id": 1, "timestamp": "2024-10-01T10:03:00", "sender": "assistant", "message": "Sure! Which one are you interested in?"},
-    {"user_id": 1, "timestamp": "2024-10-01T10:04:00", "sender": "user", "message": "On a scale of 1 to 5, how satisfied are you with our service?"},
-    {"user_id": 1, "timestamp": "2024-10-01T10:05:00", "sender": "assistant", "message": "I would rate it a 5."},
-    {"user_id": 2, "timestamp": "2024-10-01T10:00:00", "sender": "user", "message": "Hello!"},
-    {"user_id": 2, "timestamp": "2024-10-01T10:01:00", "sender": "assistant", "message": "Hi! How can I help you today?"},
-]
+def load_json(file_path, default=None):
+    try:
+        with open(file_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # If file doesn't exist, create it with default value
+        if default is not None:
+            save_json(file_path, default)
+        return default if default is not None else {}
+    except json.JSONDecodeError:
+        # Handle corrupted JSON files
+        return default if default is not None else {}
 
-# Process the chat history and print metrics
-metrics = process_chat_history(chat_history)
-print(metrics)
+def save_json(file_path, data):
+    try:
+        with open(file_path, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        print(f"Error saving to {file_path}: {e}")
 
+def save_chat_message(user_id: str, message: str, is_user: bool):
+    """Save chat message to history with proper error handling"""
+    try:
+        # Load existing chat history or initialize new list
+        chat_history = load_json(CHAT_HISTORY_FILE, [])
+        
+        # Ensure chat_history is a list
+        if not isinstance(chat_history, list):
+            chat_history = []
+        
+        # Create new message entry
+        new_message = {
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat(),
+            "sender": "user" if is_user else "assistant",
+            "message": message
+        }
+        
+        # Append new message
+        chat_history.append(new_message)
+        
+        # Save updated history
+        save_json(CHAT_HISTORY_FILE, chat_history)
+        return True
+    except Exception as e:
+        print(f"Error saving chat message: {e}")
+        return False
 
-    # return jsonify({
-    #     'total_conversations': metricstotal_conversations,
-    #     'avg_response_time': avg_response_time,
-    #     'lead_conversion_rate': lead_conversion_rate,
-    #     'csat_score': csat_score,
-    #     'chart_data': {
-    #         'dates': dates,
-    #         'conversations': conversations_data,
-    #         'resolved_queries': resolved_queries_data,
-    #         'csat': csat_data
-    #     },
-    #     'sentiment_data': sentiment_data
-    # })
+def process_incoming_message(sender_id: str, message: str) -> str:
+    """Process incoming message using the chatbot and save to history"""
+    try:
+        # Clean the sender_id (remove 'whatsapp:' prefix if present)
+        clean_sender_id = sender_id.replace('whatsapp:', '')
+        
+        # Save the incoming message to history
+        if not save_chat_message(clean_sender_id, message, is_user=True):
+            print("Warning: Failed to save user message to history")
+        
+        # Process message with chatbot
+        response = chatbot.process_message(clean_sender_id, message)
+        
+        
+        # Save the bot's response to history
+        if not save_chat_message(clean_sender_id, response, is_user=False):
+            print("Warning: Failed to save bot response to history")
+        
+        return response
+    
+    except Exception as e:
+        error_msg = f"Error processing message: {e}"
+        print(error_msg)
+        return "I apologize, but I'm having trouble processing your message right now. Please try again later."
 
+@app.route('/chat_history/<user_id>')
+def get_chat_history(user_id):
+    """Endpoint to get chat history for a specific user with error handling"""
+    try:
+        chat_history = load_json(CHAT_HISTORY_FILE, [])
+        
+        # Ensure chat_history is a list
+        if not isinstance(chat_history, list):
+            chat_history = []
+            
+        user_history = [
+            msg for msg in chat_history 
+            if str(msg['user_id']) == str(user_id)  # Convert both to strings for comparison
+        ]
+        return jsonify(user_history)
+    except Exception as e:
+        error_msg = f"Error getting chat history: {e}"
+        print(error_msg)
+        return jsonify({"error": error_msg}), 500
 
-# def get_total_conversations():
-
-#     total_conv = chat_history_collection.find()
-#     print(total_conv)
-#     return total_conv
-
-def get_avg_response_time():
-
-    return
-
+def run_streamlit():
+    subprocess.Popen(["streamlit", "run", "streamlit_frontend.py"])
 @app.route('/twilio/receiveMessage', methods=['POST'])
 def receive_message():
     try:
-        print("triggered whstapp")
-        # Extract incoming parameters from Twilio
-        print("triggered whstapp")
         message = request.form['Body']
         sender_id = request.form['From']
-
-        print(message,sender_id)
-        response_message=sender_user_massage(sender_id,message)
-
-
-        # response_message=f"you said:{message}"
-        # Echo the received message back to the sender
+        
+        print(f"Received message from {sender_id}: {message}")
+        
+        # Process the message and get response
+        response_message = process_incoming_message(sender_id, message)
+        
+        print(f"Sending response: {response_message}")
+        
+        # Send response back through Twilio
         twilio_client.messages.create(
             body=response_message,
             from_=os.getenv('TWILIO_PHONE_NUMBER'),
             to=sender_id
         )
+        
+        return 'OK', 200
+    
     except Exception as e:
-        print(f"Error: {e}")
-    return 'OK', 200
-
-def run_streamlit():
-    subprocess.Popen(["streamlit", "run", "streamlit_frontend.py"])
-
+        print(f"Error in receive_message: {e}")
+        return 'Error', 500 
+    
 @app.route('/streamlit')
 def streamlit():
     return '''
@@ -393,4 +418,4 @@ def streamlit():
 
 if __name__ == '__main__':
     #run_streamlit()
-    app.run(debug=True,port=5000,use_reloader=False)
+    app.run(debug=True,port=5000)

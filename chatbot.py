@@ -1,137 +1,116 @@
-from typing import TypedDict
-from langgraph.graph import StateGraph
+from typing import Dict
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
-from langgraph.prebuilt import ToolNode
-from tools import query_knowledge_base, search_for_product_reccommendations
-from dotenv import load_dotenv
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import LLMChain
 import os
-from pymongo import MongoClient
-from langchain_core.messages import HumanMessage, AIMessage
+from dotenv import load_dotenv
+from vector_store import FlowerShopVectorStore
+from tools import ChatHistory
 
 load_dotenv()
 
-# MongoDB setup
-mongo_client = MongoClient(os.environ['MONGODB_URI'])
-db = mongo_client['chat_history_db']
-chat_history_collection = db['chat_histories']
-
-
-prompt = """#Purpose
+class ProductChatbot:
+    def __init__(self):
+        self.chat_history = ChatHistory()
+        self.vector_store = FlowerShopVectorStore()
+        self.llm = ChatGroq(
+            model="llama-3.1-70b-versatile",
+            api_key=os.environ['GROQ_API_KEY']
+        )
+        
+        self.prompt = """#Purpose
 You are a customer service chatbot for an online products store. You can help customers achieve the goals listed below.
 
 #Goals
-1.⁠ ⁠Answer questions users might have relating to the services offered.
-2.⁠ ⁠Recommend products to users based on their preferences.
-3.⁠ ⁠Help customers check on an existing order or place a new order.
+1.⁠ ⁠Answer questions users might have about our products and services using the knowledge base.
+2.⁠ ⁠Recommend relevant products based on customer preferences and needs.
+3.⁠ ⁠Provide helpful product information and comparisons.
 
 #Tone
 Helpful and friendly. Use Gen-Z emojis to keep things lighthearted.
 
-#
+#Available Tools
+- query_knowledge_base: Look up information about products and services
+- search_for_product_recommendations: Get product recommendations based on customer needs
+
+#Current Conversation:
+{chat_history}
+
+#Human Message:
+{input}
+
+#Response:
 """
 
-chat_template = ChatPromptTemplate.from_messages([
-    ('system', prompt),
-    ('placeholder', "{messages}")
-])
+        self.memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True
+        )
 
-tools = [query_knowledge_base, search_for_product_reccommendations]
-
-llm = ChatGroq(model="llama-3.1-70b-versatile", api_key=os.environ['GROQ_API_KEY'])
-llm_with_prompt = chat_template | llm.bind_tools(tools)
-
-def filter_messages(messages: list, max_messages: int = 5):
-    """Keep only the last 'max_messages' messages."""
-    return messages[-max_messages:]
-
-class CustomState(TypedDict):
-    messages: list
-    user_id: str
-
-def call_agent(state: CustomState):
-    user_id = state['user_id']
-    
-    # Retrieve chat history from MongoDB
-    user_history = get_user_history(user_id)
-    if user_history:
-        all_messages = user_history + state['messages']
-    else:
-        all_messages = state['messages']
-    
-    # Filter messages to prevent context window from growing too large
-    filtered_messages = filter_messages(all_messages)
-    
-    response = llm_with_prompt.invoke({'messages': filtered_messages})
-    
-    # Update chat history in MongoDB
-    update_user_history(user_id, filtered_messages + [response])
-    
-    return {
-        'messages': state['messages'] + [response],
-        'user_id': user_id
-    }
-
-def is_there_tool_calls(state: CustomState):
-    last_message = state['messages'][-1]
-    if last_message.tool_calls:
-        return 'tool_node'
-    else:
-        return '__end__'
-
-graph = StateGraph(CustomState)
-tool_node = ToolNode(tools)
-
-graph.add_node('agent', call_agent)
-graph.add_node('tool_node', tool_node)
-
-graph.add_conditional_edges(
-    "agent",
-    is_there_tool_calls
-)
-graph.add_edge('tool_node', 'agent')
-
-graph.set_entry_point('agent')
-
-app = graph.compile()
-
-# Database operations
-def get_user_history(user_id: str):
-    user_history = chat_history_collection.find_one({'user_id': user_id})
-    if user_history:
-        return [HumanMessage(content=msg['content']) if msg['type'] == 'human' else AIMessage(content=msg['content']) for msg in user_history['messages']]
-    return None
-
-def update_user_history(user_id: str, messages: list):
-    chat_history_collection.update_one(
-        {'user_id': user_id},
-        {'$set': {'messages': [{'type': 'human' if isinstance(msg, HumanMessage) else 'ai', 'content': msg.content} for msg in messages]}},
-        upsert=True
-    )
-
-def clear_user_history(user_id: str):
-    chat_history_collection.delete_one({'user_id': user_id})
-
-# Example usage (for testing)
-def process_user_message(user_id: str, message: str):
-    input_message = HumanMessage(content=message)
-    state = CustomState(messages=[input_message], user_id=user_id)
-    
-    for event in app.stream(state, {}, stream_mode="values"):
-        event['messages'][-1].pretty_print()
-        print("********************")
+        self.chat_prompt = ChatPromptTemplate.from_template(self.prompt)
         
-def sender_user_massage(user_id: str, message: str):
-    input_message = HumanMessage(content=message)
-    state = CustomState(messages=[input_message], user_id=user_id)
-    
-    final_message_content = None  # To store the content of the last message
-    for event in app.stream(state, {}, stream_mode="values"):
-        final_message = event['messages'][-1]  # Store the last message in the sequence
-        final_message_content = final_message.content  # Extract the content of the last message
+        self.chain = LLMChain(
+            llm=self.llm,
+            prompt=self.chat_prompt,
+            memory=self.memory,
+            verbose=True
+        )
 
-    return final_message_content  # Return the final output message content
-
+        # Register tools with vector store integration
+        self.tools = {
+            "query_knowledge_base": self.vector_store.query_faqs,
+            "search_for_product_recommendations": self.vector_store.query_inventories
+        }
         
+        self.llm = self.llm.bind_tools(list(self.tools.values()))
 
-print(sender_user_massage("chat1","what are product is presnet"))
+    def process_message(self, user_id: str, message: str) -> str:
+        # Load user history
+        history = self.chat_history.get_user_history(user_id)
+        
+        # Update memory with historical context
+        if history:
+            for msg in history:
+                if msg['type'] == 'human':
+                    self.memory.chat_memory.add_user_message(msg['content'])
+                else:
+                    self.memory.chat_memory.add_ai_message(msg['content'])
+
+        # Process the message
+        response = self.chain.invoke({
+            "input": message
+        })
+
+        # Update history
+        new_messages = [
+            {"type": "human", "content": message},
+            {"type": "ai", "content": response['text']}
+        ]
+        
+        current_history = history + new_messages
+        self.chat_history.update_user_history(user_id, current_history)
+
+        return response['text']
+
+    def clear_history(self, user_id: str):
+        self.chat_history.clear_user_history(user_id)
+        self.memory.clear()
+
+# def main():
+#     # Example usage
+#     chatbot = ProductChatbot()
+    
+#     # Test interaction
+#     user_id = "user123"
+#     questions = [
+#         "hi"
+#     ]
+    
+#     for question in questions:
+#         print(f"\nUser: {question}")
+#         response = chatbot.process_message(user_id, question)
+#         print(f"Bot: {response}")
+
+# if __name__ == "__main__":
+#     main()
