@@ -1,8 +1,9 @@
 ## Demo Video
 
-<video src="./preview.mp4" autoplay muted controls="controls" style="max-width: 100%;">
-    Your browser does not support the video tag.
-</video>
+# Demo Video
+
+<iframe width="560" height="315" src="https://youtu.be/OMXWGkL5X_o" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+
 ## Setup
 
 To setup the python environment I did:
